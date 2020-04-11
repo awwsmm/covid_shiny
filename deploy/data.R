@@ -8,9 +8,7 @@
 #   github.com/samayo/country-json
 
 library(rjson)
-library(ggplot2)
 library(reshape2)
-library(plotly)
 
 getData <- function() {
   
