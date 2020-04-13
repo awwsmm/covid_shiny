@@ -1,3 +1,5 @@
+# Global Map
+
 mapPageUI <- function(id) {
   ns <- NS(id)
   fluidRow(
