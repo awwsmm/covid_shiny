@@ -21,7 +21,8 @@ dayPageUI <- function(id, df_orig) {
         selected = "Date"
       ),
       uiOutput(ns("days_since")),
-      checkboxInput(ns("logy"), "Logarithmic y-axis?")
+      checkboxInput(ns("logy"), "Logarithmic y-axis?"),
+      uiOutput(ns("data_selection_error"))
     ),
     column(width = 8,
       box(width = "100%",
@@ -86,7 +87,7 @@ dayPage <- function(input, output, session, df_orig) {
         if (length(countries) > 0) {
           
           # rewrite data frame and start date list
-          df <- df[countries, ]
+          df <- df[countries, , drop=FALSE]
           start <- start[start < n_days]
           names(start) <- countries
           
@@ -132,6 +133,9 @@ dayPage <- function(input, output, session, df_orig) {
       len <- length(countries)
       if (len > 0) {
         
+        # clear the "data selection" error
+        output$data_selection_error <- NULL
+        
         # create plot with first country
         first_country <- countries[1]
         plot <- plot_ly(tf, x=tilde(xval), y=tilde(first_country), name=first_country, type="scatter", mode="lines")
@@ -147,10 +151,16 @@ dayPage <- function(input, output, session, df_orig) {
           title = HTML("Cumulative Deaths / Capita / km<sup>2</sup>"),
           xaxis = list(title = xval),
           yaxis = yaxis,
-          margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20)
+          margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20),
+          showlegend = TRUE
         )
         
         output$plot <- renderPlotly(plot)
+        
+      } else {
+        output$data_selection_error <- renderUI(
+          valueBox("Error", "No data to plot!", icon=icon("exclamation-circle"), color="red", width=12)
+        )
       }
     }
   })
