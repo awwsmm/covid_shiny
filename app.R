@@ -16,8 +16,10 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
   header = dashboardHeader(title = "COVID Data Explorer"),
 
   sidebar = dashboardSidebar(
-    menuItem("Daily Plot", tabName = "dayPage", icon = icon("dashboard")),
-    menuItem("Map", tabName = "mapPage", icon = icon("th"))
+    sidebarMenu(
+      menuItem("Daily Plot", tabName = "dayPage", icon = icon("dashboard")),
+      menuItem("Map", tabName = "mapPage", icon = icon("th"))
+    )
   ),
 
   body = dashboardBody(
