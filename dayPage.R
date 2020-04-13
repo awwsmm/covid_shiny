@@ -7,27 +7,35 @@ add_country <- function(country, plot)
 
 dayPageUI <- function(id, df_orig) {
   ns <- NS(id)
-  fluidRow(
-    column(width = 4,
-      pickerInput(ns("user_countries"), "Select countries",
-        choices = rownames(df_orig),
-        options = list(`actions-box` = TRUE),
-        multiple = T,
-        selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
-        width = "100%"
+  
+  tabItem(tabName = "dayPage", 
+    fluidRow(
+      column(width = 4,
+        pickerInput(ns("user_countries"), "Select countries",
+          choices = rownames(df_orig),
+          options = list(`actions-box` = TRUE),
+          multiple = T,
+          selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
+          width = "100%"
+        )
       ),
-      selectInput(ns("alignx"), "Align x-axis on...",
-        choices = c("Date", "Days Since..."),
-        selected = "Date"
+      column(width = 4,
+        materialSwitch(ns("logy"), HTML(
+          "<span style='font-weight: bold; display: block; padding-bottom: 10px'>Logarithmic y-axis</span>"
+          ), status="success")
       ),
-      uiOutput(ns("days_since")),
-      checkboxInput(ns("logy"), "Logarithmic y-axis?"),
-      uiOutput(ns("data_selection_error"))
-    ),
-    column(width = 8,
-      box(width = "100%",
-        plotlyOutput(ns("plot"), width = "100%")
+      column(width = 4,
+        selectInput(ns("alignx"), "Align x-axis on...",
+          choices = c("Date", "Days Since..."),
+          selected = "Date"
+        ),
+        uiOutput(ns("days_since")),
+        uiOutput(ns("data_selection_error"))
       )
+    ),
+    
+    fluidRow(
+      column(width = 12, box(width = "100%", plotlyOutput(ns("plot"), height = 600)))
     )
   )
 }
@@ -40,7 +48,8 @@ dayPage <- function(input, output, session, df_orig) {
   observe({
     if (input$alignx == "Days Since...")
       output$days_since <- renderUI(
-        sliderInput(ns("xaxis_rate_align"), "...cumulative normalized deaths", 0.1, 100, 0.1, 0.1))
+        sliderTextInput(ns("xaxis_rate_align"), "...cumulative normalized deaths",
+          choices=c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000), selected=0.0001, grid=T))
     else
       output$days_since <- NULL
   })

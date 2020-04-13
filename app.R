@@ -17,15 +17,15 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
 
   sidebar = dashboardSidebar(
     sidebarMenu(
-      menuItem("Daily Plot", tabName = "dayPage", icon = icon("dashboard")),
+      menuItem("Data vs. Time", tabName = "dayPage", icon = icon("dashboard")),
       menuItem("Map", tabName = "mapPage", icon = icon("th"))
     )
   ),
 
   body = dashboardBody(
     tabItems(
-      tabItem(tabName = "dayPage", dayPageUI("dayPageId", df_orig)),
-      tabItem(tabName = "mapPage", mapPageUI("mapPageId"))
+      dayPageUI("dayPageId", df_orig),
+      mapPageUI("mapPageId")
     )
   )
 )
