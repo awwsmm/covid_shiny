@@ -13,41 +13,49 @@ dayPageUI <- function(id) {
   
   tabItem(tabName = "dayPage", 
     fluidRow(
-      column(width = 4,
-        pickerInput(ns("user_countries"), "Select countries",
-          choices = rownames(getData()),
-          options = list(`actions-box` = TRUE),
-          multiple = T,
-          selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
-          width = "100%"
-        )
-      ),
-      column(width = 4,
-        selectInput(ns("statistics"), "Data to plot",
-          choices = statistics,
-          selected = "deaths"
-        ),
-        selectInput(ns("normalizations"), "Normalize by",
-          choices = normalizations,
-          selected = "population-density"
-        ),
-        materialSwitch(ns("logy"), HTML(
-          "<span style='font-weight: bold; display: block; padding-bottom: 10px'>Logarithmic y-axis</span>"
-          ), status="success")
-      ),
-      column(width = 4,
-        selectInput(ns("alignx"), "Align x-axis on...",
-          choices = c("Date", "Days Since..."),
-          selected = "Date"
-        ),
-        uiOutput(ns("days_since")),
-        uiOutput(ns("data_selection_error"))
-      )
+      column(width = 12, box(width = "100%", plotlyOutput(ns("plot"), height = 500)))
     ),
     
     fluidRow(
-      column(width = 12, box(width = "100%", plotlyOutput(ns("plot"), height = 600)))
+      column(width = 12,
+        box(
+          title = "Plot Controls",
+          status = "info",
+          solidHeader = TRUE,
+          width = NULL,
+          collapsible = TRUE,
+          collapsed = FALSE,
+          
+          fluidRow(
+            column(width = 4,
+              selectInput(ns("statistics"), "Data to plot",
+                choices = statistics,
+                selected = "deaths"
+              ),
+              selectInput(ns("normalizations"), "Normalize by",
+                choices = normalizations,
+                selected = "population-density"
+              ),
+              materialSwitch(ns("logy"), HTML(
+                "<span style='font-weight: bold; display: block; padding-bottom: 10px'>Logarithmic</span>"
+                ), status="success")
+            ),
+            column(width = 4,
+              uiOutput(ns("country_picker"))
+            ),
+            column(width = 4,
+              selectInput(ns("alignx"), "Plot against",
+                choices = c("Date", "Days Since..."),
+                selected = "Date"
+              ),
+              uiOutput(ns("days_since")),
+              uiOutput(ns("data_selection_error"))
+            )
+          )
+        )
+      )
     )
+    
   )
 }
 
@@ -72,7 +80,26 @@ dayPage <- function(input, output, session) {
   observe({
     current_stat <- if (is.null(input$statistics))         statistics[1] else input$statistics
     current_norm <- if (is.null(input$normalizations)) normalizations[1] else input$normalizations
-    df_orig_reactive(getData(current_stat, current_norm))
+    
+    df_orig <- getData(current_stat, current_norm)
+    df_orig_reactive(df_orig)
+    
+    output$country_picker <- renderUI(
+      pickerInput(ns("user_countries"), "Select countries",
+        choices = sort(rownames(df_orig)),
+        options = pickerOptions(
+          actionsBox = TRUE,
+          liveSearch = TRUE,
+          liveSearchNormalize = TRUE,
+          liveSearchPlaceholder = "Search",
+          size = 10
+        ),
+        multiple = T,
+        selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
+        width = "100%",
+      )
+    )
+    
   })
   
   observe({
@@ -109,6 +136,7 @@ dayPage <- function(input, output, session) {
         minrate <- if (is.null(input$xaxis_rate_align)) 0.1 else input$xaxis_rate_align
         
         # get day (index) where country first met or exceeded `minrate` density-normalized cumulative deaths
+        # will be on range [1, n_days + 1]
         start <- as.vector(tail(apply(df < minrate, 1, cumsum), n = 1)) + 1
         
         # if number of days > `start`, country hasn't had that many cases yet
@@ -156,9 +184,10 @@ dayPage <- function(input, output, session) {
           # shift all rows by the appropriate amount
           for (ii in 1:length(countries)) df <- shift(df, ii, offset[ii])
           
-          # finally, transpose and add "Days Since..." column, similar to above
+          # finally, trim negative days, transpose and add "Days Since..." column, similar to above
+          df <- df[ , minoffset:(ncol(df)), drop=FALSE]
           tf <- as.data.frame(t(df))
-          tf$`Days Since...` <- (-minoffset+1):(nrow(tf)-minoffset)
+          tf$`Days Since...` <- 0:(nrow(tf)-1)
         }
       }
       
@@ -176,12 +205,23 @@ dayPage <- function(input, output, session) {
         # add all additional countries in a loop
         if (len >1) for (ii in 2:len) plot <- add_country(countries[ii], plot)
         
-        # handle linear / logarithmic y-axis
-        yaxis <- list(title=HTML("Cumulative Deaths / Capita / km<sup>2</sup>"), tickprefix="   ")
+        # create the plot title / y-axis title
+        plot_title <- HTML(paste0("Cumulative ",
+
+          if (input$statistics == "confirmed") "Confirmed Cases"
+          else if (input$statistics == "deaths") "Deaths"
+          else if (input$statistics == "recovered") "Recovered",
+          
+          if (input$normalizations == "none") ""
+          else if (input$normalizations == "population") " per capita"
+          else if (input$normalizations == "population-density") " per capita/km<sup>2</sup>"
+          ))
+        
+        yaxis <- list(title=plot_title, tickprefix="   ")
         if (input$logy) yaxis <- c(yaxis, type="log")
         
         plot <- plot %>% layout(
-          title = HTML("Cumulative Deaths / Capita / km<sup>2</sup>"),
+          title = plot_title,
           xaxis = list(title = xval),
           yaxis = yaxis,
           margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20),

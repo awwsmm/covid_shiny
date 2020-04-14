@@ -13,7 +13,7 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
 
   sidebar = dashboardSidebar(
     sidebarMenu(
-      menuItem("Data vs. Time", tabName = "dayPage", icon = icon("dashboard")),
+      menuItem("Data vs. Time", tabName = "dayPage", icon = icon("chart-line")),
       menuItem("Map", tabName = "mapPage", icon = icon("th"))
     ),
     p(style="padding: 20px", HTML(paste0(
@@ -22,7 +22,11 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
       "<a href='https://github.com/CSSEGISandData'>Johns Hopkins University</a> ",
       "(via <a href='https://github.com/pomber'>pomber</a>) and ",
       "<a href='https://github.com/samayo'>samayo</a>."))
-    )
+    ),
+    p(style="text-align: center", HTML(paste0(
+      "<a href='https://github.com/awwsmm/covid_shiny'>",
+      "<img src='images/GitHub-Mark-Light-32px.png' /></a>"
+    )))
   ),
 
   body = dashboardBody(
