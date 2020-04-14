@@ -13,17 +13,10 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 ## To Do List:
 
 - Temporal Plot:
-    - "days since" should drop all data before day 0
-    - dynamic axis titles / plot title
     - dynamic slider label for x-axis "Days Since..."
         - range and ticks should depend on statistic, normalization, and log y
-    - "Align x-axis on..." => "Plot against"
     - capitalise options in middle column dropdowns
-    - put all controls in collapsible box -- not collapsed by default
-    - crashes when "all countries" selected with any normalization
-    - add "see the source" link in sidebar -- link to GitHub repo
     - fix aspect ratio of plot (16:9?)
-    - "Data vs. Time" => "Country Data vs. Time" (and change icon)
     - add (optional) projections based on best-fit logistic curve
     - add (optional) confidence intervals on curves
     - add (optional) markers on curves
