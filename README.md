@@ -12,6 +12,11 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 
 ## To Do List:
 
+- Data:
+    - new page with just the data table (WIP)
+    - update samayo's demographic data (WIP)
+        - country populations and population densities only
+
 - Temporal Plot:
     - dynamic slider label for x-axis "Days Since..."
         - range and ticks should depend on statistic, normalization, and log y
