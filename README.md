@@ -1,15 +1,14 @@
 # covid_shiny
 
-A [`shiny`](https://github.com/rstudio/shiny) app for investigating COVID-19 data.
+A [`shiny`](https://github.com/rstudio/shiny) app for investigating COVID-19 data. Built by [templardrake](https://github.com/templardrake) and [awwsmm](https://github.com/awwsmm).
 
 ## Thanks
 
-Thanks to [pomber](https://github.com/pomber/covid19) for maintaining an up-to-date, JSON-formatted version of [Johns Hopkins' COVID-19 data](https://github.com/CSSEGISandData/COVID-19).
+Thanks to [pomber](https://github.com/pomber/covid19) for maintaining an up-to-date, JSON-formatted version of [Johns Hopkins' COVID-19 data](https://github.com/CSSEGISandData/COVID-19). Thanks to [samayo](https://github.com/samayo) for the demographic data.
 
 ## To Do List:
 
 - Temporal Plot:
-    - make normalization optional, add option to normalize based on population (as well as population density)
     - add (optional) projections based on best-fit logistic curve
     - add (optional) confidence intervals on curves
     - add (optional) markers on curves
