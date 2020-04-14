@@ -10,10 +10,10 @@
 library(rjson)
 library(reshape2)
 
-getData <- function(
-    statistic = c("deaths", "confirmed", "recovered"),
-    normalization = c("population-density", "none", "population")
-  ) {
+statistics <- c("confirmed", "deaths", "recovered")
+normalizations <- c("none", "population", "population-density")
+
+getData <- function(statistic = statistics, normalization = normalizations) {
   
   #-------------------------------------------------------------------------------
   #  matching the two datasets country-by-country

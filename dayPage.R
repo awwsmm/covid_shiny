@@ -1,3 +1,6 @@
+# get population density-normalized cumulative COVID deaths data
+source("data.R")
+
 # function to turn a string term into a formula
 tilde <- function(term) as.formula(paste0("~`", term, "`"))
 
@@ -5,14 +8,14 @@ tilde <- function(term) as.formula(paste0("~`", term, "`"))
 add_country <- function(country, plot)
   plot %>% add_trace(y = tilde(country), name = country, mode = 'lines')
 
-dayPageUI <- function(id, df_orig) {
+dayPageUI <- function(id) {
   ns <- NS(id)
   
   tabItem(tabName = "dayPage", 
     fluidRow(
       column(width = 4,
         pickerInput(ns("user_countries"), "Select countries",
-          choices = rownames(df_orig),
+          choices = rownames(getData()),
           options = list(`actions-box` = TRUE),
           multiple = T,
           selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
@@ -20,6 +23,14 @@ dayPageUI <- function(id, df_orig) {
         )
       ),
       column(width = 4,
+        selectInput(ns("statistics"), "Data to plot",
+          choices = statistics,
+          selected = "deaths"
+        ),
+        selectInput(ns("normalizations"), "Normalize by",
+          choices = normalizations,
+          selected = "population-density"
+        ),
         materialSwitch(ns("logy"), HTML(
           "<span style='font-weight: bold; display: block; padding-bottom: 10px'>Logarithmic y-axis</span>"
           ), status="success")
@@ -40,7 +51,7 @@ dayPageUI <- function(id, df_orig) {
   )
 }
 
-dayPage <- function(input, output, session, df_orig) {
+dayPage <- function(input, output, session) {
   
   ns <- session$ns
   
@@ -54,7 +65,20 @@ dayPage <- function(input, output, session, df_orig) {
       output$days_since <- NULL
   })
   
-  observe({  
+  # reactive data frame
+  df_orig_reactive <- reactiveVal(NULL)
+  
+  # ...update when statistic or normalization selection changes
+  observe({
+    current_stat <- if (is.null(input$statistics))         statistics[1] else input$statistics
+    current_norm <- if (is.null(input$normalizations)) normalizations[1] else input$normalizations
+    df_orig_reactive(getData(current_stat, current_norm))
+  })
+  
+  observe({
+    
+    # get the data as a non-reactive data frame
+    df_orig <- df_orig_reactive()
     
     # create plot only if user has selected at least one country
     len <- length(input$user_countries)
