@@ -1,3 +1,6 @@
+# get population density-normalized cumulative COVID deaths data
+source("data.R")
+
 # function to turn a string term into a formula
 tilde <- function(term) as.formula(paste0("~`", term, "`"))
 
@@ -5,33 +8,50 @@ tilde <- function(term) as.formula(paste0("~`", term, "`"))
 add_country <- function(country, plot)
   plot %>% add_trace(y = tilde(country), name = country, mode = 'lines')
 
-dayPageUI <- function(id, df_orig) {
+dayPageUI <- function(id) {
   ns <- NS(id)
-  fluidRow(
-    column(width = 4,
-      pickerInput(ns("user_countries"), "Select countries",
-        choices = rownames(df_orig),
-        options = list(`actions-box` = TRUE),
-        multiple = T,
-        selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
-        width = "100%"
+  
+  tabItem(tabName = "dayPage", 
+    fluidRow(
+      column(width = 4,
+        pickerInput(ns("user_countries"), "Select countries",
+          choices = rownames(getData()),
+          options = list(`actions-box` = TRUE),
+          multiple = T,
+          selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
+          width = "100%"
+        )
       ),
-      selectInput(ns("alignx"), "Align x-axis on...",
-        choices = c("Date", "Days Since..."),
-        selected = "Date"
+      column(width = 4,
+        selectInput(ns("statistics"), "Data to plot",
+          choices = statistics,
+          selected = "deaths"
+        ),
+        selectInput(ns("normalizations"), "Normalize by",
+          choices = normalizations,
+          selected = "population-density"
+        ),
+        materialSwitch(ns("logy"), HTML(
+          "<span style='font-weight: bold; display: block; padding-bottom: 10px'>Logarithmic y-axis</span>"
+          ), status="success")
       ),
-      uiOutput(ns("days_since")),
-      checkboxInput(ns("logy"), "Logarithmic y-axis?")
-    ),
-    column(width = 8,
-      box(width = "100%",
-        plotlyOutput(ns("plot"), width = "100%")
+      column(width = 4,
+        selectInput(ns("alignx"), "Align x-axis on...",
+          choices = c("Date", "Days Since..."),
+          selected = "Date"
+        ),
+        uiOutput(ns("days_since")),
+        uiOutput(ns("data_selection_error"))
       )
+    ),
+    
+    fluidRow(
+      column(width = 12, box(width = "100%", plotlyOutput(ns("plot"), height = 600)))
     )
   )
 }
 
-dayPage <- function(input, output, session, df_orig) {
+dayPage <- function(input, output, session) {
   
   ns <- session$ns
   
@@ -39,12 +59,26 @@ dayPage <- function(input, output, session, df_orig) {
   observe({
     if (input$alignx == "Days Since...")
       output$days_since <- renderUI(
-        sliderInput(ns("xaxis_rate_align"), "...cumulative normalized deaths", 0.1, 100, 0.1, 0.1))
+        sliderTextInput(ns("xaxis_rate_align"), "...cumulative normalized deaths",
+          choices=c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000), selected=0.0001, grid=T))
     else
       output$days_since <- NULL
   })
   
-  observe({  
+  # reactive data frame
+  df_orig_reactive <- reactiveVal(NULL)
+  
+  # ...update when statistic or normalization selection changes
+  observe({
+    current_stat <- if (is.null(input$statistics))         statistics[1] else input$statistics
+    current_norm <- if (is.null(input$normalizations)) normalizations[1] else input$normalizations
+    df_orig_reactive(getData(current_stat, current_norm))
+  })
+  
+  observe({
+    
+    # get the data as a non-reactive data frame
+    df_orig <- df_orig_reactive()
     
     # create plot only if user has selected at least one country
     len <- length(input$user_countries)
@@ -86,7 +120,7 @@ dayPage <- function(input, output, session, df_orig) {
         if (length(countries) > 0) {
           
           # rewrite data frame and start date list
-          df <- df[countries, ]
+          df <- df[countries, , drop=FALSE]
           start <- start[start < n_days]
           names(start) <- countries
           
@@ -132,6 +166,9 @@ dayPage <- function(input, output, session, df_orig) {
       len <- length(countries)
       if (len > 0) {
         
+        # clear the "data selection" error
+        output$data_selection_error <- NULL
+        
         # create plot with first country
         first_country <- countries[1]
         plot <- plot_ly(tf, x=tilde(xval), y=tilde(first_country), name=first_country, type="scatter", mode="lines")
@@ -147,10 +184,16 @@ dayPage <- function(input, output, session, df_orig) {
           title = HTML("Cumulative Deaths / Capita / km<sup>2</sup>"),
           xaxis = list(title = xval),
           yaxis = yaxis,
-          margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20)
+          margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20),
+          showlegend = TRUE
         )
         
         output$plot <- renderPlotly(plot)
+        
+      } else {
+        output$data_selection_error <- renderUI(
+          valueBox("Error", "No data to plot!", icon=icon("exclamation-circle"), color="red", width=12)
+        )
       }
     }
   })

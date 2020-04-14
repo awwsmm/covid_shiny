@@ -1,10 +1,11 @@
-# Global Map
 
 mapPageUI <- function(id) {
   ns <- NS(id)
-  fluidRow(
-    column(width = 12,
-      h2("Widgets tab content")
+  tabItem(tabName = "mapPage", 
+    fluidRow(
+      column(width = 12,
+        h2("Work in Progress :: Map Page")
+      )
     )
   )
 }
