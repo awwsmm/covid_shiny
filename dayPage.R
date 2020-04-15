@@ -65,12 +65,33 @@ dayPage <- function(input, output, session) {
   
   # listen to x-axis alignment selection and render this separately from other UI
   observe({
-    if (input$alignx == "Days Since...")
+    if (input$alignx == "Days Since...") {
+      
+      # get the min and max of the selected data
+      range <- getDataRange(input$statistics, input$normalizations)
+      
+      # set the number of ticks on the slider
+      n_ticks <- 8
+      
+      # if log y-scale, split into `n_ticks` orders of magnitude
+      choices <- if (input$logy) {
+          maxpow <- floor(log10(range[2]))
+          10^((maxpow-(n_ticks-1)):maxpow)
+        # if linear scale, do simple division
+        } else {
+          (0:(n_ticks-1))*range[2]/n_ticks
+        }
+      
+      # dynamically create slider input label
+      label <- "...cumulative"
+      if (input$normalizations != "none") label <- paste(label, "normalized")
+      label <- paste(label, input$statistics)
+      
       output$days_since <- renderUI(
-        sliderTextInput(ns("xaxis_rate_align"), "...cumulative normalized deaths",
-          choices=c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000), selected=0.0001, grid=T))
-    else
-      output$days_since <- NULL
+        sliderTextInput(ns("xaxis_rate_align"), tolower(label),
+          choices=formatC(choices, format="g", digits=2), grid=T))
+      
+    } else output$days_since <- NULL
   })
   
   # reactive data frame

@@ -9,9 +9,19 @@
 
 library(rjson)
 library(reshape2)
+library(memoise)
 
 statistics <- c("confirmed", "deaths", "recovered")
 normalizations <- c("none", "population", "population-density")
+
+fromJSON <- memoise(rjson::fromJSON)
+
+getDataRange <- function(statistic, normalization) {
+  data <- getData(statistic, normalization)
+  c(min(data), max(data))
+}
+
+getDataRange <- memoise(getDataRange)
 
 getData <- function(statistic = statistics, normalization = normalizations) {
   
@@ -20,7 +30,7 @@ getData <- function(statistic = statistics, normalization = normalizations) {
   #-------------------------------------------------------------------------------
   
   # get the COVID-19 data from this URL (JSON format)
-  data_covid <- rjson::fromJSON(file="https://bit.ly/2UMgpf7")
+  data_covid <- fromJSON(file="https://bit.ly/2UMgpf7")
   
   # get the dates from the first country (repeated in each country)
   dates <- sapply(data_covid[[1]], function(x) x$date)
@@ -39,7 +49,7 @@ getData <- function(statistic = statistics, normalization = normalizations) {
     file_name <- paste0("country-by-", norm, ".json")
     
     # get the JSON file
-    data_norm <- rjson::fromJSON(file=paste0(awwsmm_github, file_name))
+    data_norm <- fromJSON(file=paste0(awwsmm_github, file_name))
   
     # normalization factor by country (0 if unknown)
     norm_factors <- sapply(data_norm, function(x) { p <- x[[2]]; if (is.null(p)) 0 else as.numeric(p) })
@@ -111,13 +121,13 @@ getData <- function(statistic = statistics, normalization = normalizations) {
   # set column names to dates
   colnames(df) <- dates
   
-  # get cumulative statistics rather than daily statistics
-  df_sum <- t(apply(df, 1, cumsum))
-  
-  # filter to only use countries found above
-  df_sum <- df_sum[countries, , drop=FALSE]
+  # # filter to only use countries found above
+  df <- df[countries, , drop=FALSE]
   
   # get cumulative statistics normalized to population density
-  if (norm == "none") df_sum else (df_sum / norm_factors)
-
+  if (norm == "none") df else (df / norm_factors)
 }
+
+getData <- memoise(getData)
+
+
