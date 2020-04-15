@@ -4,8 +4,6 @@ A [`shiny`](https://github.com/rstudio/shiny) app for investigating COVID-19 dat
 
 Built by [templardrake](https://github.com/templardrake) and [awwsmm](https://github.com/awwsmm).
 
-![Example Plot](https://raw.githubusercontent.com/awwsmm/covid_shiny/master/www/images/demo_plot.png)
-
 ## Thanks
 
 Thanks to [pomber](https://github.com/pomber/covid19) for maintaining an up-to-date, JSON-formatted version of [Johns Hopkins' COVID-19 data](https://github.com/CSSEGISandData/COVID-19).
