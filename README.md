@@ -13,6 +13,7 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 ## To Do List:
 
 - Data Table Page:
+    - add button to hide / show plot legend
     - allow user to select displayed countries, statistic, normalization
     - only show a few countries by default
     - update samayo's demographic data
