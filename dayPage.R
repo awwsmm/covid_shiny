@@ -13,7 +13,7 @@ dayPageUI <- function(id) {
   
   tabItem(tabName = "dayPage", 
     fluidRow(
-      column(width = 12, box(width = "100%", plotlyOutput(ns("plot"), height="40vw")))
+      column(width = 12, box(width = "100%", plotlyOutput(ns("plot"), height="50vh")))
     ),
     
     fluidRow(
