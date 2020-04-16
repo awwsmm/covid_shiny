@@ -35,12 +35,20 @@ tablePage <- function(input, output, session) {
   output$data_table = DT::renderDataTable(
     DT::datatable(tf, class="nowrap hover display",
       rownames = FALSE,
-      extensions = c("Buttons", "ColReorder"),
+      extensions = c("Buttons", "ColReorder", "FixedColumns"),
       options = list(
         scrollX = TRUE,
         dom = "Brtip",
-        buttons = c("copy", "csv", "excel", "pdf", "print"),
-        colReorder = list(fixedColumnsLeft = 1)
+        colReorder = list(fixedColumnsLeft = 1),
+        fixedColumns = TRUE,
+        buttons = list(
+          list(extend = "copy"),
+          list(extend = "csv"),
+          list(extend = "excel"),
+          list(extend = "pdf"),
+          list(extend = "print"),
+          list(extend = 'colvis', columns = 1:(ncol(tf)-1))
+        )
       )
     )
   )
