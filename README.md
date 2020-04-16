@@ -13,7 +13,6 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 ## To Do List:
 
 - Data Table Page:
-    - always show first (Date) column
     - allow user to select displayed countries, statistic, normalization
     - only show a few countries by default
     - update samayo's demographic data
@@ -22,7 +21,6 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 
 - Data vs. Time Page:
     - capitalise options in middle column dropdowns
-    - fix aspect ratio of plot (16:9?)
     - add (optional) projections based on best-fit logistic curve
     - add (optional) confidence intervals on curves
     - add (optional) markers on curves
