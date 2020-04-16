@@ -13,7 +13,14 @@ dayPageUI <- function(id) {
   
   tabItem(tabName = "dayPage", 
     fluidRow(
-      column(width = 12, box(width = "100%", plotlyOutput(ns("plot"), height="50vh")))
+      column(width = 12,
+        box(width = "100%",
+          plotlyOutput(ns("plot"), height="50vh"),
+          tags$div(style="padding-left: 75%; width:100%",
+            materialSwitch(ns("show_legend"),
+              tags$strong("Show Legend"), status="success", value = TRUE))
+        )
+      )
     ),
     
     fluidRow(
@@ -97,6 +104,14 @@ dayPage <- function(input, output, session) {
   # reactive data frame
   df_orig_reactive <- reactiveVal(NULL)
   
+  # save previously-selected countries so they can be reselected
+  old_countries <- reactiveVal(c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"))
+  
+  # ignoreInit so old_countries isn't set to NULL on initialization
+  observeEvent({ input$statistics; input$normalizations }, {
+    old_countries(input$user_countries)
+  }, ignoreInit = TRUE)
+  
   # ...update when statistic or normalization selection changes
   observe({
     current_stat <- if (is.null(input$statistics))         statistics[1] else input$statistics
@@ -116,7 +131,7 @@ dayPage <- function(input, output, session) {
           size = 10
         ),
         multiple = T,
-        selected = c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"),
+        selected = intersect(rownames(df_orig), old_countries()),
         width = "100%",
       )
     )
@@ -246,7 +261,7 @@ dayPage <- function(input, output, session) {
           xaxis = list(title = xval),
           yaxis = yaxis,
           margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20),
-          showlegend = TRUE
+          showlegend = input$show_legend
         )
         
         output$plot <- renderPlotly(plot)

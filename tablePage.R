@@ -8,12 +8,14 @@ tablePageUI <- function(id) {
   tabItem(tabName = "tablePage", 
     fluidRow(
       column(width = 12,
-        h2("Work in Progress :: Table Page")
+        h3("Cumulative Deaths to Date")
       )
     ),
     fluidRow(
       column(width = 12,
-        DT::dataTableOutput(ns("data_table"))
+        box(width = "100%",
+          DT::dataTableOutput(ns("data_table"))
+        )
       )
     )
   )
@@ -35,7 +37,7 @@ tablePage <- function(input, output, session) {
   output$data_table = DT::renderDataTable(
     DT::datatable(tf, class="nowrap hover display",
       rownames = FALSE,
-      extensions = c("Buttons", "ColReorder", "FixedColumns"),
+      extensions = c("Buttons", "ColReorder", "FixedColumns", "Scroller"),
       options = list(
         scrollX = TRUE,
         dom = "Brtip",
@@ -46,9 +48,11 @@ tablePage <- function(input, output, session) {
           list(extend = "csv"),
           list(extend = "excel"),
           list(extend = "pdf"),
-          list(extend = "print"),
-          list(extend = 'colvis', columns = 1:(ncol(tf)-1))
-        )
+          list(extend = "print")
+        ),
+        deferRender = TRUE,
+        scrollY = "55vh",
+        scroller = TRUE
       )
     )
   )

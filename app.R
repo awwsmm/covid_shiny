@@ -15,7 +15,7 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
   sidebar = dashboardSidebar(
     sidebarMenu(
       menuItem("Data vs. Time", tabName = "dayPage", icon = icon("chart-line")),
-      menuItem("Map", tabName = "mapPage", icon = icon("map-marked-alt")),
+#     menuItem("Map", tabName = "mapPage", icon = icon("map-marked-alt")),
       menuItem("Data Table", tabName = "tablePage", icon = icon("table"))
     ),
     p(style="padding: 20px", HTML(paste0(
@@ -34,7 +34,7 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
   body = dashboardBody(
     tabItems(
       dayPageUI("dayPageId"),
-      mapPageUI("mapPageId"),
+#     mapPageUI("mapPageId"),
       tablePageUI("tablePageId")
     )
   )
@@ -42,7 +42,7 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
 
 server <- function(input, output) {
   callModule(dayPage, "dayPageId")
-  callModule(mapPage, "mapPageId")
+# callModule(mapPage, "mapPageId")
   callModule(tablePage, "tablePageId")
 }
 
