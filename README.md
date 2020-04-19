@@ -12,18 +12,15 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 
 ## To Do List:
 
-- Temporal Plot:
-    - "days since" should drop all data before day 0
-    - dynamic axis titles / plot title
-    - dynamic slider label for x-axis "Days Since..."
-        - range and ticks should depend on statistic, normalization, and log y
-    - "Align x-axis on..." => "Plot against"
+- Data Table Page:
+    - allow user to select displayed countries, statistic, normalization
+    - only show a few countries by default
+    - update samayo's demographic data
+        - country populations and population densities only
+    - mirror pomber's JSON file
+
+- Data vs. Time Page:
     - capitalise options in middle column dropdowns
-    - put all controls in collapsible box -- not collapsed by default
-    - crashes when "all countries" selected with any normalization
-    - add "see the source" link in sidebar -- link to GitHub repo
-    - fix aspect ratio of plot (16:9?)
-    - "Data vs. Time" => "Country Data vs. Time" (and change icon)
     - add (optional) projections based on best-fit logistic curve
     - add (optional) confidence intervals on curves
     - add (optional) markers on curves
@@ -32,5 +29,4 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
     - (logarithmic) x-axis is cumulative deaths
     - (logarithmic) y-axis is new deaths (past week)
     - slider for time
-    - maybe a separate plot because so different
-    - maybe a best-fit curve for all data
+    - best-fit curve for all data
