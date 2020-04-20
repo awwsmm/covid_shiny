@@ -13,7 +13,12 @@ mapPageUI <- function(id) {
         #h2("Work in Progress :: Map Page"),
         plotlyOutput(ns("plot"), height="50vh"),
       )
-    )
+    ),
+    sidebarPanel(
+      sliderInput("integer", "Days since initial death(s)",
+                  min = 1, max = ncol(df),
+                  value = 1,step=1)
+      )
   )
 }
 
