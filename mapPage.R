@@ -1,5 +1,6 @@
 source("data.R")
 
+df <- as.data.frame(df)
 g <- list(
   scope = 'world',
   projection = list(type = 'orthographic'),
@@ -15,26 +16,26 @@ mapPageUI <- function(id) {
       )
     ),
     sidebarPanel(
-      sliderInput("integer", "Days since initial death(s)",
+      sliderInput(ns("day"), "Days since initial death(s)",
                   min = 1, max = ncol(df),
-                  value = 1,step=1)
+                  value = 3,step=1)
       )
   )
 }
 
 mapPage <- function(input, output, session){
   ns <- session$ns
-
- last <- tail(colnames(df),n=1)
- 
- last_df <- melt(df[,last])   
-  #print(head(last_df))
-  plot <- plot_geo() %>% 
-          add_trace(z= last_df$value,
-                            span = I(0), 
-                            locations = rownames(last_df), 
-                            locationmode="country names") %>% 
-                            layout(geo = g)
   
+  d_reactive <- reactive({
+    name <- colnames(df[input$day])
+    day <- melt(df[name])
+    return (day)
+  }) 
+ observe({
+   d_obs <- d_reactive()
+  plot <- plot_geo() %>%
+          add_trace(z=d_obs$value,locations=rownames(df),locationmode="country names") %>%
+          layout(geo=g)
   output$plot <- renderPlotly(plot)
+ })
   }
