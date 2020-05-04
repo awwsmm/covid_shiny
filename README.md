@@ -21,9 +21,7 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 
 - Data vs. Time Page:
     - capitalise options in middle column dropdowns
-    - add (optional) projections based on best-fit logistic curve
     - add (optional) confidence intervals on curves
-    - add (optional) markers on curves
 
 - create "Bhatia mode" (https://www.youtube.com/watch?v=54XLXg4fYsc)
     - (logarithmic) x-axis is cumulative deaths
