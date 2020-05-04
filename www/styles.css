@@ -1,0 +1,18 @@
+.material-switch {
+  text-align: center;
+}
+
+.material-switch > label::before {
+  margin-left: -20px;
+}
+
+.matswitchlabel {
+  font-weight: bold;
+  display: inline-block;
+  padding-bottom: 10px;
+  width: 100px;
+}
+
+#dayPageId-plot {
+  margin-bottom: 25px;
+}

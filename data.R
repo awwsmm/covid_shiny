@@ -16,14 +16,17 @@ normalizations <- c("none", "population", "population-density")
 
 fromJSON <- memoise(rjson::fromJSON)
 
-getDataRange <- function(statistic, normalization) {
+uniqueValues <- memoise(function(statistic, normalization) {
+  data <- getData(statistic, normalization)
+  sort(unique(as.vector(data)))
+})
+
+getDataRange <- memoise(function(statistic, normalization) {
   data <- getData(statistic, normalization)
   c(min(data), max(data))
-}
+})
 
-getDataRange <- memoise(getDataRange)
-
-getData <- function(statistic = statistics, normalization = normalizations) {
+getData <- memoise(function(statistic = statistics, normalization = normalizations) {
   
   #-------------------------------------------------------------------------------
   #  matching the two datasets country-by-country
@@ -126,8 +129,5 @@ getData <- function(statistic = statistics, normalization = normalizations) {
   
   # get cumulative statistics normalized to population density
   if (norm == "none") df else (df / norm_factors)
-}
 
-getData <- memoise(getData)
-
-
+})
