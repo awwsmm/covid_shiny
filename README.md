@@ -15,8 +15,6 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 - Data Table Page:
     - allow user to select displayed countries, statistic, normalization
     - only show a few countries by default
-    - update samayo's demographic data
-        - country populations and population densities only
     - mirror pomber's JSON file
 
 - Data vs. Time Page:
