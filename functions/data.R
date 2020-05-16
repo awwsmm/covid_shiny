@@ -16,10 +16,7 @@ normalizations <- c("none", "population", "population-density")
 
 fromJSON <- memoise(rjson::fromJSON)
 
-uniqueValues <- memoise(function(statistic, normalization) {
-  data <- getData(statistic, normalization)
-  sort(unique(as.vector(data)))
-})
+uniqueValues <- memoise(function(df) sort(unique(as.vector(df))))
 
 getDataRange <- memoise(function(statistic, normalization) {
   data <- getData(statistic, normalization)
@@ -67,21 +64,21 @@ getData <- memoise(function(statistic = statistics, normalization = normalizatio
     map <- list()
     
     # manually change demographic data country name <- covid data country name
-    map[["Cape Verde"]] <- "Cabo Verde"
-    map[["Congo"]] <- "Congo (Brazzaville)"
+    map[["Cape Verde"]]                       <- "Cabo Verde"
+    map[["Congo"]]                            <- "Congo (Brazzaville)"
     map[["The Democratic Republic of Congo"]] <- "Congo (Kinshasa)"
-    map[["Ivory Coast"]] <- "Cote d'Ivoire"
-    map[["Czech Republic"]] <- "Czechia"
-    map[["Swaziland"]] <- "Eswatini"
-    map[["Fiji Islands"]] <- "Fiji"
-    map[["Holy See (Vatican City State)"]] <- "Holy See"
-    map[["South Korea"]] <- "Korea, South"
-    map[["Russian Federation"]] <- "Russia"
-    map[["SriLanka"]] <- "Sri Lanka"
-    map[["Taiwan"]] <- "Taiwan*"
-    map[["United States"]] <- "US"
-    map[["Palestine"]] <- "West Bank and Gaza"
-    map[["Myanmar"]] <- "Burma"
+    map[["Ivory Coast"]]                      <- "Cote d'Ivoire"
+    map[["Czech Republic"]]                   <- "Czechia"
+    map[["Swaziland"]]                        <- "Eswatini"
+    map[["Fiji Islands"]]                     <- "Fiji"
+    map[["Holy See (Vatican City State)"]]    <- "Holy See"
+    map[["South Korea"]]                      <- "Korea, South"
+    map[["Russian Federation"]]               <- "Russia"
+    map[["SriLanka"]]                         <- "Sri Lanka"
+    map[["Taiwan"]]                           <- "Taiwan*"
+    map[["United States"]]                    <- "US"
+    map[["Palestine"]]                        <- "West Bank and Gaza"
+    map[["Myanmar"]]                          <- "Burma"
     
     # convert demographic-style country names to covid-style ones
     convert <- function(name) {

@@ -1,7 +1,5 @@
-# get population density-normalized cumulative COVID deaths data
-source("data.R")
-library(nls2)    # for nonlinear curve fitting (logistic growth)
-library(memoise) # for memoization of computationally-intensive functions
+library(nls2)            # for nonlinear curve fitting (logistic growth)
+library(memoise)         # for memoization of computationally-intensive functions
 
 # function to turn a string term into a formula
 tilde <- function(term) as.formula(paste0("~`", term, "`"))
@@ -83,187 +81,156 @@ add_fit <- function(df, x, y, plot, extrapolate) {
   }
 }
 
-dayPageUI <- function(id) {
-  ns <- NS(id)
-  
-  tabItem(tabName = "dayPage", 
-    fluidRow(
-      column(width = 12,
-        box(width = "100%", collapsible = TRUE, collapsed = FALSE,
-          fluidRow(
-            column(width = 12, plotlyOutput(ns("plot"), height="80vh"))
-          ),
-          fluidRow(
-            column(width = 4,
-              materialSwitch(ns("log_y"), status = "success",
-                HTML("<span class='matswitchlabel'>Logarithmic</span>"))
-            ),
-            column(width = 4,
-              materialSwitch(ns("show_markers"), status = "success",
-                HTML("<span class='matswitchlabel'>Show Markers</span>"))
-            ),
-            column(width = 4,
-              materialSwitch(ns("show_legend"), status = "success", value = TRUE,
-                HTML("<span class='matswitchlabel'>Show Legend</span>"))
-            )
-          )
-    ) ) ),
+defaultPlotControlsUI <- function(
+    logyToggleUI, markersToggleUI, legendToggleUI, plotAgainstUI,
+    daysSinceUI, dataSelectionErrorUI, plotLineUI, errorsToggleUI, forecastToggleUI
+  ) {
+  box(title = "Plot Controls", status = "info", width = NULL,
+    solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
     
     fluidRow(
-      column(width = 12,
-        box(title = "Plot Controls", status = "info", width = NULL,
-          solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
-          
-          fluidRow(
-            column(width = 4,
-              uiOutput(ns("user_countries_UI")),
-              
-              selectInput(ns("statistics"), "Data to plot",
-                choices = statistics, selected = "deaths" ),
-              
-              selectInput(ns("normalizations"), "Normalize by",
-                choices = normalizations, selected = "population" )
-            ),
-            column(width = 4,
-              
-              selectInput(ns("plot_against"), "Plot against",
-                choices = c("Date", "Days Since..."), selected = "Date"),
-              
-              uiOutput(ns("days_since_UI")),
-              
-              uiOutput(ns("data_selection_error"))
-            ),
-            column(width = 4,
-              uiOutput(ns("plot_line_UI")),
-#              materialSwitch(ns("show_errors"), status="success",
-#                HTML("<span class='matswitchlabel'>Show Errors</span>")),
-              uiOutput(ns("show_forecast_UI"))
-            )
-          )
-    ) ) )
+      column(width = 4, logyToggleUI),
+      column(width = 4, markersToggleUI),
+      column(width = 4, legendToggleUI)
+    ),
+    fluidRow(
+      column(width = 4,
+        plotAgainstUI,
+        daysSinceUI,
+        dataSelectionErrorUI
+      ),
+      column(width = 4,
+        plotLineUI,
+#         errorsToggleUI,
+        forecastToggleUI
+      )
+    )
+
   )
 }
 
-dayPage <- function(input, output, session) {
+plotControlsUI <- function(id, layout = defaultPlotControlsUI) {
+  ns <- NS(id)
+  layout(
+    uiOutput(ns("logyToggleUI")),
+    uiOutput(ns("markersToggleUI")),
+    uiOutput(ns("legendToggleUI")),
+    uiOutput(ns("plotAgainstUI")),
+    uiOutput(ns("daysSinceUI")),
+    uiOutput(ns("dataSelectionErrorUI")),
+    uiOutput(ns("plotLineUI")),
+    uiOutput(ns("errorsToggleUI")),
+    uiOutput(ns("forecastToggleUI"))
+  )
+}
+
+# listen to the plot-control inputs and return a plot object
+plotControls <- function(input, output, session,
+  df_reactive, statistic_reactive, normalization_reactive,
+  selected = list(
+    logy = FALSE,
+    markers = FALSE,
+    legend = TRUE,
+    plotAgainst = c("Date", "Days Since..."),
+    forecast = FALSE
+  )) {
   ns <- session$ns
   
-  # listen to x-axis alignment selection and render this separately from other UI
+  # render static UI elements...
+  
+  output$logyToggleUI <- renderUI(
+    materialSwitch(ns("logyToggle"), status = "success", value = selected$logy,
+      HTML("<span class='matswitchlabel'>Logarithmic</span>")))
+  
+  output$markersToggleUI <- renderUI(
+    materialSwitch(ns("markersToggle"), status = "success", value = selected$markers,
+      HTML("<span class='matswitchlabel'>Show Markers</span>")))
+  
+  output$legendToggleUI <- renderUI(
+    materialSwitch(ns("legendToggle"), status = "success", value = selected$legend,
+      HTML("<span class='matswitchlabel'>Show Legend</span>")))
+  
+  output$plotAgainstUI <- renderUI(
+    selectInput(ns("plotAgainst"), "Plot Against",
+      choices = c("Date", "Days Since..."), selected = selected$plotAgainst[1]))
+  
+  # create the "days since" selection UI
   observe({
-    if (input$plot_against == "Days Since...") {
+    if (!is.null(input$plotAgainst) && input$plotAgainst == "Days Since...") {
 
       # set the number of ticks on the slider
       n_ticks <- 8
 
       # try to get equal numbers of points in each vertical slice
-      unique_values <- uniqueValues(input$statistics, input$normalizations)
+      unique_values <- uniqueValues(df_reactive())
       indices <- round(length(unique_values) / (n_ticks+1)) * 1:n_ticks
-      choices <- unique_values[indices]
+      choices <- formatC(unique_values[indices], format="g", digits=2)
       
       # dynamically create slider input label
       label <- "...cumulative"
-      if (input$normalizations != "none") label <- paste(label, "normalized")
-      label <- paste(label, input$statistics)
+      if (normalization_reactive() != "none") label <- paste(label, "normalized")
+      label <- paste(label, statistic_reactive())
       
-      output$days_since_UI <- renderUI(
-        sliderTextInput(ns("days_since"), tolower(label),
-          choices=formatC(choices, format="g", digits=2), grid=T))
+      output$daysSinceUI <- renderUI(
+        sliderTextInput(ns("daysSince"), tolower(label), choices = choices, grid=T))
       
-    } else output$days_since_UI <- NULL
+    } else output$daysSinceUI <- NULL
   })
+
+  # save previously-selected plot line choice so it can be reselected below
+  old_plotLine <- reactiveVal("Simple Linear Interpolation")
   
-  # reactive data frame
-  df_orig_reactive <- reactiveVal(NULL)
-  
-  # save previously-selected countries so they can be reselected
-  old_countries <- reactiveVal(c("Ireland", "US", "Italy", "United Kingdom", "Spain", "France", "Germany", "Japan"))
-  
-  # ignoreInit so old_countries isn't set to NULL on initialization
-  observeEvent({ input$statistics; input$normalizations }, {
-    old_countries(input$user_countries)
-  }, ignoreInit = TRUE)
-  
-  # ...update when statistic or normalization selection changes
+  # when the show markers toggle changes, we need to re-render the "plot line" UI
   observe({
-    current_stat <- if (is.null(input$statistics))         statistics[1] else input$statistics
-    current_norm <- if (is.null(input$normalizations)) normalizations[1] else input$normalizations
     
-    df_orig <- getData(current_stat, current_norm)
-    df_orig_reactive(df_orig)
-    
-    output$user_countries_UI <- renderUI(
-      pickerInput(ns("user_countries"), "Select countries",
-        choices = sort(rownames(df_orig)),
-        options = pickerOptions(
-          actionsBox = TRUE,
-          liveSearch = TRUE,
-          liveSearchNormalize = TRUE,
-          liveSearchPlaceholder = "Search",
-          size = 10
-        ),
-        multiple = T,
-        selected = intersect(rownames(df_orig), old_countries()),
-        width = "100%",
-      )
-    )
-  })
-  
-  # save previously-selected "Plot Line" choice so it can be reselected
-  old_plot_line <- reactiveVal("Simple Linear Interpolation")
-  
-  # ignoreInit so old_plot_line isn't set to NULL on initialization
-  observeEvent(input$show_markers, {
-    old_plot_line(input$plot_line)
-  }, ignoreInit = TRUE)
-  
-  # render "plot line" UI, changes when "show_markers" changes
-  observe({
+    # FIX ME -- not sure if correct
+    if (!is.null(input$plotLine)) old_plotLine(input$plotLine)
     
     choices <- c("Simple Linear Interpolation", "Best-Fit (Bi-)Logistic Curve")
-    if (input$show_markers) choices <- c(choices, "None")
+    if (!is.null(input$markersToggle) && input$markersToggle) choices <- c(choices, "None")
     
-    output$plot_line_UI <- renderUI(
-      selectInput(ns("plot_line"), "Plot Line",
+    output$plotLineUI <- renderUI(
+      selectInput(ns("plotLine"), "Plot Line",
         choices = choices,
-        selected = old_plot_line()
+        selected = old_plotLine()
       )
     )
   })
   
-  # render "show forecast" UI, changes when "plot_line" changes
-  observeEvent(input$plot_line, {
-    
-    output$show_forecast_UI <-
-      if (input$plot_line == "Best-Fit (Bi-)Logistic Curve")
-        renderUI(materialSwitch(ns("show_forecast"), status="success",
-          HTML("<span class='matswitchlabel'>Show Forecast</span>")))
+  # when the plot line selection changes, we need to re-render the "show forecast" UI
+  observeEvent(input$plotLine, {
+    output$forecastToggleUI <-
+      if (input$plotLine == "Best-Fit (Bi-)Logistic Curve")
+        renderUI(
+          materialSwitch(ns("forecastToggle"), status="success", value = selected$forecast,
+            HTML("<span class='matswitchlabel'>Show Forecast</span>")))
       else NULL
     
     # markers are only optional with a simple linear interpolation
-    if (input$plot_line == "Simple Linear Interpolation") {
-      shinyjs::show("show_markers")
+    if (input$plotLine == "Simple Linear Interpolation") {
+      shinyjs::show("markersToggle")
+      
     } else {
-      updateMaterialSwitch(session, ("show_markers"), value = TRUE)
-      shinyjs::hide("show_markers")
+      updateMaterialSwitch(session, "markersToggle", value = TRUE)
+      shinyjs::hide("markersToggle")
     }
-    
-    
-  }, ignoreInit = TRUE)
+  })
   
+  # this is the reactive plot object we'll return from this module
+  plot_reactive <- reactiveVal(NULL)
+  
+  # when any inputs change, we need to re-render the plot
   observe({
     
     # get the data as a non-reactive data frame
-    df_orig <- df_orig_reactive()
+    df <- df_reactive()
+    countries <- rownames(df)
     
     # create plot only if user has selected at least one country
-    len <- length(input$user_countries)
-    if (len > 0) {
+    if (length(countries) > 0) {
       
-      # copy original data, but only use user-selected countries
-      df <- df_orig[input$user_countries, , drop=FALSE]
-      countries <- NULL
-      
-      # transposed data with additional "Date" column
-      if (input$plot_against == "Date") {
+      # transpose data and add additional "Date" column
+      if (input$plotAgainst == "Date") {
         
         # what to plot along the x-axis
         xval <- "Date"
@@ -272,15 +239,12 @@ dayPage <- function(input, output, session) {
         tf <- as.data.frame(t(df))
         tf$Date <- as.Date(rownames(tf))
         
-        # countries to use? all of them
-        countries <- input$user_countries
-        
         # complex row-wise shifting of data
-      } else if (input$plot_against == "Days Since...") {
+      } else if (input$plotAgainst == "Days Since...") {
         
         # what to plot along the x-axis
         xval <- "Days Since..."
-        minrate <- if (is.null(input$days_since)) 0.1 else input$days_since
+        minrate <- if (is.null(input$daysSince)) 0.1 else input$daysSince
         
         # get day (index) where country first met or exceeded `minrate` density-normalized cumulative deaths
         # will be on range [1, n_days + 1]
@@ -343,11 +307,11 @@ dayPage <- function(input, output, session) {
       if (len > 0) {
         
         # clear the "data selection" error
-        output$data_selection_error <- NULL
+        output$dataSelectionErrorUI <- NULL
         
         # show just lines? or markers and lines? or curve fit?
-        mode <- if (input$plot_line == "Best-Fit (Bi-)Logistic Curve" || input$plot_line == "None") "markers"
-                else if (input$show_markers) "lines+markers"
+        mode <- if (input$plotLine == "Best-Fit (Bi-)Logistic Curve" || input$plotLine == "None") "markers"
+                else if (input$markersToggle) "lines+markers"
                 else "lines"
         
         # create plot with first country
@@ -356,42 +320,50 @@ dayPage <- function(input, output, session) {
           type="scatter", mode=mode)
         
         # add all additional countries in a loop
-        if (len >1) for (ii in 2:len) plot <- add_country(countries[ii], plot, mode)
+        if (len > 1) for (ii in 2:len) plot <- add_country(countries[ii], plot, mode)
+        
+        # create the dynamic plot title using the selected statistic and normalization
+        statistic <- statistic_reactive()
+        normalization <- normalization_reactive()
         
         # create the plot title / y-axis title
         plot_title <- HTML(paste0("Cumulative ",
 
-          if (input$statistics == "confirmed") "Confirmed Cases"
-          else if (input$statistics == "deaths") "Deaths"
-          else if (input$statistics == "recovered") "Recovered",
+          if (statistic == "confirmed") "Confirmed Cases"
+          else if (statistic == "deaths") "Deaths"
+          else if (statistic == "recovered") "Recovered",
           
-          if (input$normalizations == "none") ""
-          else if (input$normalizations == "population") " per capita"
-          else if (input$normalizations == "population-density") " per capita/km<sup>2</sup>"
+          if (normalization == "none") ""
+          else if (normalization == "population") " per capita"
+          else if (normalization == "population-density") " per capita/km<sup>2</sup>"
           ))
         
         yaxis <- list(title=plot_title, tickprefix="   ")
-        if (input$log_y) yaxis <- c(yaxis, type="log")
+        if (input$logyToggle) yaxis <- c(yaxis, type="log")
         
         plot <- plot %>% layout(
           title = plot_title,
           xaxis = list(title = xval),
           yaxis = yaxis,
           margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20),
-          showlegend = input$show_legend
+          showlegend = input$legendToggle
         )
         
         # if "Best-Fit Logistic Curve", add curve fits
-        if (input$plot_line == "Best-Fit (Bi-)Logistic Curve")
-          for (ii in 1:len) plot <- add_fit(tf, xval, countries[ii], plot, input$show_forecast)
+        if (input$plotLine == "Best-Fit (Bi-)Logistic Curve")
+          for (ii in 1:len) plot <- add_fit(tf, xval, countries[ii], plot, input$forecastToggle)
         
-        output$plot <- renderPlotly(plot)
+        plot_reactive(plot)
         
       } else {
-        output$data_selection_error <- renderUI(
-          valueBox("Error", "No data to plot!", icon=icon("exclamation-circle"), color="red", width=12)
-        )
+        output$dataSelectionErrorUI <- renderUI(
+          valueBox("Error", "No data to plot!", icon=icon("exclamation-circle"), color="red", width=12))
+        
+        plot_reactive(NULL)
       }
     }
   })
+
+  # return the reactive plot object from this module whenever inputs change
+  plot_reactive
 }

@@ -12,17 +12,26 @@ Thanks to [samayo](https://github.com/samayo) for the demographic data.
 
 ## To Do List:
 
-- Data Table Page:
-    - allow user to select displayed countries, statistic, normalization
-    - only show a few countries by default
-    - mirror pomber's JSON file
+- finish Bhatia page
+    - use new modules
+    - best-fit curve on Bhatia plot
 
-- Data vs. Time Page:
-    - capitalise options in middle column dropdowns
-    - add (optional) confidence intervals on curves
+- add "days since" selection into x-axis title
 
-- create "Bhatia mode" (https://www.youtube.com/watch?v=54XLXg4fYsc)
-    - (logarithmic) x-axis is cumulative deaths
-    - (logarithmic) y-axis is new deaths (past week)
-    - slider for time
-    - best-fit curve for all data
+- fix weird loading of table page
+
+- add warning about forecast
+
+- make accumulation of data optional in data controls box
+
+- add errors functionality; depends on "Plot Line"
+    - interp => statistical band
+    - logistic curve => +/- 1.96 * se.fit
+    - none => statistical bars
+
+- add "postcast"
+    - previous forecasts compared to current data
+
+- use animationOptions() with sliderInput() on rewind data
+
+- mirror pomber's JSON file

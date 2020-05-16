@@ -4,9 +4,10 @@ library(plotly)
 library(shinydashboard)
 
 # source all of the pages
-source("dayPage.R")
-source("mapPage.R")
-source("tablePage.R")
+source("pages/dayPage.R", chdir=TRUE)
+source("pages/bhatiaPage.R", chdir=TRUE)
+source("pages/mapPage.R", chdir=TRUE)
+source("pages/tablePage.R", chdir=TRUE)
 
 ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
 
@@ -15,6 +16,7 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
   sidebar = dashboardSidebar(
     sidebarMenu(
       menuItem("Data vs. Time", tabName = "dayPage", icon = icon("chart-line")),
+#     menuItem("Bhatia Plot", tabName = "bhatiaPage", icon = icon("chart-line")),
 #     menuItem("Map", tabName = "mapPage", icon = icon("map-marked-alt")),
       menuItem("Data Table", tabName = "tablePage", icon = icon("table"))
     ),
@@ -38,6 +40,7 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
     ),
     tabItems(
       dayPageUI("dayPageId"),
+#     bhatiaPageUI("bhatiaPageId"),
 #     mapPageUI("mapPageId"),
       tablePageUI("tablePageId")
     )
@@ -46,6 +49,7 @@ ui <- dashboardPage(title = "COVID Data Explorer", skin = "black",
 
 server <- function(input, output) {
   callModule(dayPage, "dayPageId")
+# callModule(bhatiaPage, "bhatiaPageId")
 # callModule(mapPage, "mapPageId")
   callModule(tablePage, "tablePageId")
 }
