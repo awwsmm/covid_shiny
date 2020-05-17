@@ -2,9 +2,9 @@
 
 A [`shiny`](https://github.com/rstudio/shiny) app for investigating COVID-19 data.
 
-![](https://raw.githubusercontent.com/awwsmm/covid_shiny/master/www/images/screenshot.png)
-
-[Try it out here!](https://awwsmm.shinyapps.io/covid_explorer)
+[![](https://raw.githubusercontent.com/awwsmm/covid_shiny/master/www/images/screenshot.png)
+<br/><br/>
+Try it out here!](https://awwsmm.shinyapps.io/covid_explorer)
 
 Built by [templardrake](https://github.com/templardrake) and [awwsmm](https://github.com/awwsmm).
 
