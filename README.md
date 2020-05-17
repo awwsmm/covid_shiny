@@ -10,7 +10,7 @@ Built by [templardrake](https://github.com/templardrake) and [awwsmm](https://gi
 
 Thanks to [pomber](https://github.com/pomber/covid19) for maintaining an up-to-date, JSON-formatted version of [Johns Hopkins' COVID-19 data](https://github.com/CSSEGISandData/COVID-19).
 
-Thanks to [samayo](https://github.com/samayo) for the demographic data.
+Thanks to [samayo](https://github.com/samayo) for the [demographic data](https://github.com/samayo/country-json).
 
 ## To Do List:
 
