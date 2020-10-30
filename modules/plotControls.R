@@ -83,7 +83,7 @@ add_fit <- function(df, x, y, plot, extrapolate) {
 
 defaultPlotControlsUI <- function(
     logyToggleUI, markersToggleUI, legendToggleUI, plotAgainstUI,
-    daysSinceUI, dataSelectionErrorUI, plotLineUI, errorsToggleUI, forecastToggleUI
+    daysSinceUI, plotLineUI, errorsToggleUI, forecastToggleUI
   ) {
   box(title = "Plot Controls", status = "info", width = NULL,
     solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
@@ -96,8 +96,7 @@ defaultPlotControlsUI <- function(
     fluidRow(
       column(width = 4,
         plotAgainstUI,
-        daysSinceUI,
-        dataSelectionErrorUI
+        daysSinceUI
       ),
       column(width = 4,
         plotLineUI,
@@ -117,7 +116,6 @@ plotControlsUI <- function(id, layout = defaultPlotControlsUI) {
     uiOutput(ns("legendToggleUI")),
     uiOutput(ns("plotAgainstUI")),
     uiOutput(ns("daysSinceUI")),
-    uiOutput(ns("dataSelectionErrorUI")),
     uiOutput(ns("plotLineUI")),
     uiOutput(ns("errorsToggleUI")),
     uiOutput(ns("forecastToggleUI"))
@@ -131,7 +129,7 @@ plotControls <- function(input, output, session,
     logy = FALSE,
     markers = FALSE,
     legend = TRUE,
-    plotAgainst = c("Date", "Days Since..."),
+    plotAgainst = c("date", "days since..."),
     forecast = FALSE
   )) {
   ns <- session$ns
@@ -152,11 +150,11 @@ plotControls <- function(input, output, session,
   
   output$plotAgainstUI <- renderUI(
     selectInput(ns("plotAgainst"), "Plot Against",
-      choices = c("Date", "Days Since..."), selected = selected$plotAgainst[1]))
+      choices = c("date", "days since..."), selected = selected$plotAgainst[1]))
   
   # create the "days since" selection UI
   observe({
-    if (!is.null(input$plotAgainst) && input$plotAgainst == "Days Since...") {
+    if (!is.null(input$plotAgainst) && input$plotAgainst == "days since...") {
 
       # set the number of ticks on the slider
       n_ticks <- 8
@@ -178,7 +176,7 @@ plotControls <- function(input, output, session,
   })
 
   # save previously-selected plot line choice so it can be reselected below
-  old_plotLine <- reactiveVal("Simple Linear Interpolation")
+  old_plotLine <- reactiveVal("simple linear interpolation")
   
   # when the show markers toggle changes, we need to re-render the "plot line" UI
   observe({
@@ -186,8 +184,8 @@ plotControls <- function(input, output, session,
     # FIX ME -- not sure if correct
     if (!is.null(input$plotLine)) old_plotLine(input$plotLine)
     
-    choices <- c("Simple Linear Interpolation", "Best-Fit (Bi-)Logistic Curve")
-    if (!is.null(input$markersToggle) && input$markersToggle) choices <- c(choices, "None")
+    choices <- c("simple linear interpolation", "best-fit (bi-)logistic curve")
+    if (!is.null(input$markersToggle) && input$markersToggle) choices <- c(choices, "none")
     
     output$plotLineUI <- renderUI(
       selectInput(ns("plotLine"), "Plot Line",
@@ -200,14 +198,14 @@ plotControls <- function(input, output, session,
   # when the plot line selection changes, we need to re-render the "show forecast" UI
   observeEvent(input$plotLine, {
     output$forecastToggleUI <-
-      if (input$plotLine == "Best-Fit (Bi-)Logistic Curve")
+      if (input$plotLine == "best-fit (bi-)logistic curve")
         renderUI(
           materialSwitch(ns("forecastToggle"), status="success", value = selected$forecast,
             HTML("<span class='matswitchlabel'>Show Forecast</span>")))
       else NULL
     
     # markers are only optional with a simple linear interpolation
-    if (input$plotLine == "Simple Linear Interpolation") {
+    if (input$plotLine == "simple linear interpolation") {
       shinyjs::show("markersToggle")
       
     } else {
@@ -229,21 +227,21 @@ plotControls <- function(input, output, session,
     # create plot only if user has selected at least one country
     if (length(countries) > 0) {
       
-      # transpose data and add additional "Date" column
-      if (input$plotAgainst == "Date") {
+      # transpose data and add additional "date" column
+      if (input$plotAgainst == "date") {
         
         # what to plot along the x-axis
-        xval <- "Date"
+        xval <- "date"
         
-        # transpose and add a Date column
+        # transpose and add a date column
         tf <- as.data.frame(t(df))
-        tf$Date <- as.Date(rownames(tf))
+        tf$date <- as.Date(rownames(tf))
         
         # complex row-wise shifting of data
-      } else if (input$plotAgainst == "Days Since...") {
+      } else if (input$plotAgainst == "days since...") {
         
         # what to plot along the x-axis
-        xval <- "Days Since..."
+        xval <- "days since..."
         minrate <- if (is.null(input$daysSince)) 0.1 else input$daysSince
         
         # get day (index) where country first met or exceeded `minrate` density-normalized cumulative deaths
@@ -295,10 +293,10 @@ plotControls <- function(input, output, session,
           # shift all rows by the appropriate amount
           for (ii in 1:length(countries)) df <- shift(df, ii, offset[ii])
           
-          # finally, trim negative days, transpose and add "Days Since..." column, similar to above
+          # finally, trim negative days, transpose and add "days since..." column, similar to above
           df <- df[ , minoffset:(ncol(df)), drop=FALSE]
           tf <- as.data.frame(t(df))
-          tf$`Days Since...` <- 0:(nrow(tf)-1)
+          tf$`days since...` <- 0:(nrow(tf)-1)
         }
       }
       
@@ -306,11 +304,8 @@ plotControls <- function(input, output, session,
       len <- length(countries)
       if (len > 0) {
         
-        # clear the "data selection" error
-        output$dataSelectionErrorUI <- NULL
-        
         # show just lines? or markers and lines? or curve fit?
-        mode <- if (input$plotLine == "Best-Fit (Bi-)Logistic Curve" || input$plotLine == "None") "markers"
+        mode <- if (input$plotLine == "best-fit (bi-)logistic curve" || input$plotLine == "none") "markers"
                 else if (input$markersToggle) "lines+markers"
                 else "lines"
         
@@ -330,38 +325,50 @@ plotControls <- function(input, output, session,
         plot_title <- HTML(paste0("Cumulative ",
 
           if (statistic == "confirmed") "Confirmed Cases"
-          else if (statistic == "deaths") "Deaths"
-          else if (statistic == "recovered") "Recovered",
+          else if (statistic == "deaths") "Confirmed Deaths"
+          else if (statistic == "recovered") "Confirmed Recoveries",
           
           if (normalization == "none") ""
-          else if (normalization == "population") " per capita"
-          else if (normalization == "population-density") " per capita/km<sup>2</sup>"
+          else if (normalization == "population") " Per Capita"
+          else if (normalization == "population-density") " Per Capita/km<sup>2</sup>"
           ))
         
-        yaxis <- list(title=plot_title, tickprefix="   ")
+        yaxis <- list(title="", tickprefix="   ")
         if (input$logyToggle) yaxis <- c(yaxis, type="log")
+        
+        # update x axis title based on "days since" selection
+        if (xval == "days since...") {
+          norm <- normalization_reactive()
+          stat <- statistic_reactive()
+          
+          if (stat == "confirmed") stat <- "confirmed cases"
+          else if (stat == "deaths") stat <- "confirmed deaths"
+          else stat <- "confirmed recoveries"
+          
+          xtitle <- paste("days since<b>", input$daysSince, "</b>cumulative")
+          if (norm != "none") xtitle <- paste(xtitle, "normalized")
+          xtitle <- paste(xtitle, stat)
+        } else xtitle <- "date"
         
         plot <- plot %>% layout(
           title = plot_title,
-          xaxis = list(title = xval),
+          xaxis = list(title = xtitle),
           yaxis = yaxis,
           margin = list(l = 50, r = 50, b = 80, t = 80, pad = 20),
           showlegend = input$legendToggle
         )
         
         # if "Best-Fit Logistic Curve", add curve fits
-        if (input$plotLine == "Best-Fit (Bi-)Logistic Curve")
+        if (input$plotLine == "best-fit (bi-)logistic curve")
           for (ii in 1:len) plot <- add_fit(tf, xval, countries[ii], plot, input$forecastToggle)
         
         plot_reactive(plot)
         
-      } else {
-        output$dataSelectionErrorUI <- renderUI(
-          valueBox("Error", "No data to plot!", icon=icon("exclamation-circle"), color="red", width=12))
-        
-        plot_reactive(NULL)
-      }
-    }
+      # if no countries are left after filtering, return NULL and display error
+      } else plot_reactive(NULL)
+      
+    # if user has selected no countries, return NULL and display error
+    } else plot_reactive(NULL)
   })
 
   # return the reactive plot object from this module whenever inputs change

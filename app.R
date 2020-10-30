@@ -2,6 +2,14 @@ library(shiny)
 library(shinyWidgets)
 library(plotly)
 library(shinydashboard)
+library(shinycssloaders) # for "loading" spinners
+
+# get population density-normalized cumulative COVID deaths data
+source("functions/data.R", chdir=TRUE)
+
+# load the UI modules
+source("modules/dataControls.R", chdir=TRUE)
+source("modules/plotControls.R", chdir=TRUE)
 
 # source all of the pages
 source("pages/dayPage.R", chdir=TRUE)

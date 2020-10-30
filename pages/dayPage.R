@@ -1,11 +1,3 @@
-# get population density-normalized cumulative COVID deaths data
-source("../functions/data.R", chdir=TRUE)
-
-library(shinycssloaders) # for "loading" spinner on plot
-
-source("../modules/dataControls.R", chdir=TRUE)
-source("../modules/plotControls.R", chdir=TRUE)
-
 dayPageUI <- function(id) {
   ns <- NS(id)
   
@@ -39,5 +31,8 @@ dayPage <- function(input, output, session) {
     df_reactive, statistic_reactive, normalization_reactive)
 
   # render the plot
-  output$plot <- renderPlotly(plot_reactive())
+  output$plot <- renderPlotly({
+    validate(need(!is.null(plot_reactive()), "No data available for selection"))
+    plot_reactive()
+  })
 }

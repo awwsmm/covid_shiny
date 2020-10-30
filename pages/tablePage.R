@@ -1,6 +1,3 @@
-# get population density-normalized cumulative COVID deaths data
-source("../functions/data.R", chdir=TRUE)
-
 library(DT)
 
 tablePageUI <- function(id) {
@@ -14,7 +11,8 @@ tablePageUI <- function(id) {
     fluidRow(
       column(width = 12,
         box(width = "100%",
-          DT::dataTableOutput(ns("data_table"))
+          withSpinner(type = getOption("spinner.type", default = 7),
+            DT::dataTableOutput(ns("data_table")))
         )
       )
     ),
@@ -36,7 +34,7 @@ tablePage <- function(input, output, session) {
   
   # modify the reactive data frame so its easy to render
   dfr <- reactive({
-    validate(need(nrow(df_reactive()) > 0, "Please select one or more countries."))
+    validate(need(nrow(df_reactive()) > 0, "No data available for selection"))
   
     # transpose the data, add a Date column
     tf <- as.data.frame(t(df_reactive()))

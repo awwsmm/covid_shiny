@@ -1,5 +1,3 @@
-# get population density-normalized cumulative COVID deaths data
-source("../functions/data.R", chdir=TRUE)
 library(memoise)
 
 windowed_data <- memoise(function(df, n_days) {
